@@ -51,40 +51,23 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     const [users, setUsers] = useState<User[]>([]);
 
     useEffect(() => {
-        // Load initial users
-        const loadUsers = () => {
-            const storedUsers = localStorage.getItem("skillSwapUsers");
-            if (storedUsers) {
-                setUsers(JSON.parse(storedUsers));
-            } else {
-                // Seed if empty
-                localStorage.setItem("skillSwapUsers", JSON.stringify(SEED_USERS));
-                setUsers(SEED_USERS);
+        // Initial fetch
+        const fetchUsers = async () => {
+            try {
+                const res = await fetch('/api/users');
+                const data = await res.json();
+                setUsers(data);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
             }
         };
 
-        loadUsers();
+        fetchUsers();
 
-        // Listen for storage events (changes in other tabs)
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "skillSwapUsers") {
-                loadUsers();
-            }
-        };
+        // Poll every 2 seconds for real-time updates across devices
+        const interval = setInterval(fetchUsers, 2000);
 
-        // Listen for custom events (changes in same tab)
-        const handleLocalChange = () => {
-            loadUsers();
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        // We'll dispatch a custom event when registering/updating users in AuthContext
-        window.addEventListener("skillSwapUsersUpdated", handleLocalChange);
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-            window.removeEventListener("skillSwapUsersUpdated", handleLocalChange);
-        };
+        return () => clearInterval(interval);
     }, []);
 
     const getAllSkills = () => {

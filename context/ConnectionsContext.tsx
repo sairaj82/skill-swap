@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
+import { useUsers } from "./UsersContext";
 import { User } from "../types";
 
 export interface ConnectionRequest {
@@ -25,44 +26,27 @@ const ConnectionsContext = createContext<ConnectionsContextType | undefined>(und
 
 export function ConnectionsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    const { users } = useUsers();
     const [requests, setRequests] = useState<ConnectionRequest[]>([]);
 
     useEffect(() => {
-        const loadRequests = () => {
-            const stored = localStorage.getItem("skillSwapRequests");
-            if (stored) {
-                setRequests(JSON.parse(stored));
+        const fetchRequests = async () => {
+            try {
+                const res = await fetch('/api/connections');
+                const data = await res.json();
+                setRequests(data);
+            } catch (error) {
+                console.error("Failed to fetch requests", error);
             }
         };
 
-        loadRequests();
+        fetchRequests();
 
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === "skillSwapRequests") {
-                loadRequests();
-            }
-        };
-
-        const handleLocalChange = () => {
-            loadRequests();
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        window.addEventListener("skillSwapRequestsUpdated", handleLocalChange);
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-            window.removeEventListener("skillSwapRequestsUpdated", handleLocalChange);
-        };
+        const interval = setInterval(fetchRequests, 2000);
+        return () => clearInterval(interval);
     }, []);
 
-    const saveRequests = (newRequests: ConnectionRequest[]) => {
-        setRequests(newRequests);
-        localStorage.setItem("skillSwapRequests", JSON.stringify(newRequests));
-        window.dispatchEvent(new Event("skillSwapRequestsUpdated"));
-    };
-
-    const sendRequest = (toUserId: string) => {
+    const sendRequest = async (toUserId: string) => {
         if (!user) return;
 
         // Prevent duplicate
@@ -74,7 +58,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const newRequest: ConnectionRequest = {
+        const newRequest = {
             id: Date.now().toString(),
             senderId: user.id,
             receiverId: toUserId,
@@ -82,17 +66,31 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
             timestamp: Date.now()
         };
 
-        saveRequests([...requests, newRequest]);
+        await fetch('/api/connections', {
+            method: 'POST',
+            body: JSON.stringify(newRequest)
+        });
+
+        // Optimistic update
+        setRequests([...requests, newRequest as ConnectionRequest]);
     };
 
-    const acceptRequest = (requestId: string) => {
-        const updated = requests.map(r => r.id === requestId ? { ...r, status: 'ACCEPTED' as const } : r);
-        saveRequests(updated);
+    const acceptRequest = async (requestId: string) => {
+        await fetch('/api/connections', {
+            method: 'PUT',
+            body: JSON.stringify({ requestId, status: 'ACCEPTED' })
+        });
+
+        setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'ACCEPTED' as const } : r));
     };
 
-    const rejectRequest = (requestId: string) => {
-        const updated = requests.map(r => r.id === requestId ? { ...r, status: 'REJECTED' as const } : r);
-        saveRequests(updated);
+    const rejectRequest = async (requestId: string) => {
+        await fetch('/api/connections', {
+            method: 'PUT',
+            body: JSON.stringify({ requestId, status: 'REJECTED' })
+        });
+
+        setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'REJECTED' as const } : r));
     };
 
     const getConnectionStatus = (otherUserId: string): 'NONE' | 'PENDING_SENT' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'REJECTED' => {
@@ -117,11 +115,10 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         if (!user) return [];
 
         const myRequests = requests.filter(r => r.receiverId === user.id && r.status === 'PENDING');
-        const allUsers: User[] = JSON.parse(localStorage.getItem("skillSwapUsers") || "[]");
 
         return myRequests.map(req => ({
             ...req,
-            sender: allUsers.find(u => u.id === req.senderId)
+            sender: users.find(u => u.id === req.senderId)
         }));
     };
 

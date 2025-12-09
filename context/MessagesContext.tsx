@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
+import { useUsers } from "./UsersContext";
 import { User } from "../types";
 
 export interface Message {
@@ -32,6 +33,7 @@ const MessagesContext = createContext<MessagesContextType | undefined>(undefined
 
 export function MessagesProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    const { users } = useUsers();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
@@ -137,11 +139,8 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
         const partnerId = conversation.participants.find(p => p !== user.id);
         if (!partnerId) return undefined;
 
-        // Need to fetch user details. Since this is sync, we'll cheat a bit and read from localStorage directly
-        // In a real app we'd use the UsersContext, but we can't easily cross-consume contexts conditionally inside a function without hooks.
-        // Better approach: helper function.
-        const allUsers: User[] = JSON.parse(localStorage.getItem("skillSwapUsers") || "[]");
-        return allUsers.find(u => u.id === partnerId);
+        // Use users from context
+        return users.find(u => u.id === partnerId);
     };
 
     return (

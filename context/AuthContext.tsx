@@ -5,8 +5,8 @@ import { User, AuthCredentials, RegisterData } from "../types";
 
 interface AuthContextType {
     user: User | null;
-    login: (credentials: AuthCredentials) => boolean;
-    register: (data: RegisterData) => boolean;
+    login: (credentials: AuthCredentials) => Promise<boolean>;
+    register: (data: RegisterData) => Promise<boolean>;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
     isAuthenticated: boolean;
@@ -25,51 +25,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const register = (userData: RegisterData) => {
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem("skillSwapUsers") || "[]");
+    const register = async (userData: RegisterData) => {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
 
-        // Check if email already exists
-        if (users.find((u: User) => u.email === userData.email)) {
-            return false;
+        const data = await res.json();
+
+        if (data.success) {
+            setUser(data.user);
+            localStorage.setItem("skillSwapUser", JSON.stringify(data.user));
+            return true;
         }
 
-        // Add new user
-        const newUser: User = {
-            ...userData,
-            id: Date.now().toString(),
-            teaching: [],
-            learning: [
-                {
-                    id: `skill-${Date.now()}`,
-                    name: "Community Member",
-                    category: "Lifestyle"
-                }
-            ]
-        };
-
-        users.push(newUser);
-        localStorage.setItem("skillSwapUsers", JSON.stringify(users));
-
-        // Auto login after register
-        setUser(newUser);
-        localStorage.setItem("skillSwapUser", JSON.stringify(newUser));
-
-        // Dispatch event for same-tab updates
-        window.dispatchEvent(new Event("skillSwapUsersUpdated"));
-
-        return true;
+        return false;
     };
 
-    const login = (credentials: AuthCredentials) => {
-        // In a real app, we would verify password here
-        // For this mock, we'll check if the user exists in our "db"
-        const users = JSON.parse(localStorage.getItem("skillSwapUsers") || "[]");
-        const foundUser = users.find((u: User) => u.email === credentials.email && u.password === credentials.password);
+    const login = async (credentials: AuthCredentials) => {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        });
 
-        if (foundUser) {
-            setUser(foundUser);
-            localStorage.setItem("skillSwapUser", JSON.stringify(foundUser));
+        const data = await res.json();
+
+        if (data.success) {
+            setUser(data.user);
+            localStorage.setItem("skillSwapUser", JSON.stringify(data.user));
             return true;
         }
         return false;
@@ -80,16 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("skillSwapUser");
     };
 
-    const updateUser = (userData: Partial<User>) => {
+    const updateUser = async (userData: Partial<User>) => {
         if (user) {
             const newUser = { ...user, ...userData };
             setUser(newUser);
             localStorage.setItem("skillSwapUser", JSON.stringify(newUser));
 
-            // Also update in the "db" to persist changes across sessions
-            const users = JSON.parse(localStorage.getItem("skillSwapUsers") || "[]");
-            const updatedUsers = users.map((u: User) => u.email === user.email ? newUser : u);
-            localStorage.setItem("skillSwapUsers", JSON.stringify(updatedUsers));
+            // Sync with backend
+            await fetch('/api/users', {
+                method: 'POST', // We reused POST for update in route
+                body: JSON.stringify(newUser)
+            });
         }
     };
 

@@ -52,6 +52,7 @@ export default function Profile() {
             description: "Build cross-platform mobile apps. I can teach you the basics of React Native and Expo.",
             category: "Development",
             authorName: user?.name || "User",
+            authorId: user?.id || "mock-user-id",
             type: "TEACH" as const,
         },
         {
@@ -60,6 +61,7 @@ export default function Profile() {
             description: "How to grow your own vegetables in limited space. Balcony gardening tips.",
             category: "Lifestyle",
             authorName: user?.name || "User",
+            authorId: user?.id || "mock-user-id",
             type: "TEACH" as const,
         },
     ];
@@ -71,6 +73,7 @@ export default function Profile() {
             description: "I've always wanted to try pottery. Looking for a beginner workshop or mentor.",
             category: "Art",
             authorName: user?.name || "User",
+            authorId: user?.id || "mock-user-id",
             type: "LEARN" as const,
         },
     ];

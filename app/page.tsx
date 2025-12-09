@@ -1,35 +1,24 @@
+"use client";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SkillCard from "@/components/SkillCard";
 import Link from "next/link";
+import { useUsers } from "@/context/UsersContext";
+import { useEffect, useState } from "react";
+import { Skill } from "@/types";
 
 export default function Home() {
-  const featuredSkills = [
-    {
-      id: "1",
-      title: "Advanced React Patterns",
-      description: "Master higher-order components, render props, and custom hooks to build scalable applications.",
-      category: "Development",
-      authorName: "Alex Dev",
-      type: "TEACH" as const,
-    },
-    {
-      id: "2",
-      title: "Conversational Spanish",
-      description: "Looking for someone to practice Spanish conversation with. I can offer English tutoring in return.",
-      category: "Language",
-      authorName: "Maria Garcia",
-      type: "LEARN" as const,
-    },
-    {
-      id: "3",
-      title: "Digital Photography Basics",
-      description: "Learn how to use your DSLR camera manually. ISO, Aperture, Shutter Speed explained simply.",
-      category: "Art",
-      authorName: "John Camera",
-      type: "TEACH" as const,
-    },
-  ];
+  const { getAllSkills } = useUsers();
+  const [featuredSkills, setFeaturedSkills] = useState<(Skill & { authorName: string; type: "TEACH" | "LEARN"; authorId: string })[]>([]);
+
+  useEffect(() => {
+    // Get all skills and shuffle/slice for "featured" section
+    const allSkills = getAllSkills();
+    // Simple shuffle and take 3 for featured
+    const shuffled = [...allSkills].sort(() => 0.5 - Math.random());
+    setFeaturedSkills(shuffled.slice(0, 3));
+  }, [getAllSkills]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -80,7 +69,16 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredSkills.map((skill) => (
-                <SkillCard key={skill.id} {...skill} />
+                <SkillCard
+                  key={`${skill.id}-${skill.type}`}
+                  id={skill.id}
+                  title={skill.name}
+                  description={`A ${skill.category} skill offered by ${skill.authorName}. Connect to learn more!`}
+                  category={skill.category}
+                  authorName={skill.authorName}
+                  authorId={skill.authorId}
+                  type={skill.type}
+                />
               ))}
             </div>
 

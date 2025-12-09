@@ -1,0 +1,90 @@
+[
+  {
+    "id": "1",
+    "name": "Alex Dev",
+    "email": "alex@example.com",
+    "password": "password",
+    "teaching": [
+      {
+        "id": "101",
+        "name": "Advanced React Patterns",
+        "category": "Development"
+      }
+    ],
+    "learning": [
+      {
+        "id": "102",
+        "name": "Jazz Guitar Improvisation",
+        "category": "Music"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Maria Garcia",
+    "email": "maria@example.com",
+    "password": "password",
+    "teaching": [
+      {
+        "id": "201",
+        "name": "Conversational Spanish",
+        "category": "Language"
+      }
+    ],
+    "learning": [
+      {
+        "id": "202",
+        "name": "Python for Data Science",
+        "category": "Development"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "John Camera",
+    "email": "john@example.com",
+    "password": "password",
+    "teaching": [
+      {
+        "id": "301",
+        "name": "Digital Photography Basics",
+        "category": "Art"
+      }
+    ],
+    "learning": [
+      {
+        "id": "302",
+        "name": "Public Speaking Mastery",
+        "category": "Lifestyle"
+      }
+    ]
+  },
+  {
+    "id": "1765305513410",
+    "name": "SAIRAJ",
+    "email": "chachadisairaj5@gmail.com",
+    "password": "1",
+    "teaching": [],
+    "learning": [
+      {
+        "id": "skill-1765305513410",
+        "name": "Community Member",
+        "category": "Lifestyle"
+      }
+    ]
+  },
+  {
+    "id": "1765305536454",
+    "name": "bhoomi",
+    "email": "chachadisairaj6@gmail.com",
+    "password": "2",
+    "teaching": [],
+    "learning": [
+      {
+        "id": "skill-1765305536454",
+        "name": "Community Member",
+        "category": "Lifestyle"
+      }
+    ]
+  }
+]

@@ -13,12 +13,12 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         // Attempt to log in with credentials
-        const success = login({ email, password });
+        const success = await login({ email, password });
 
         if (success) {
             router.push("/profile");
@@ -113,7 +113,7 @@ export default function Login() {
                     </div>
 
                     <div className="mt-6 text-center text-sm text-slate-400">
-                        Don't have an account?{" "}
+                        Don&apos;t have an account?{" "}
                         <Link href="/register" className="font-medium text-indigo-400 hover:text-indigo-300">
                             Sign up
                         </Link>
